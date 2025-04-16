@@ -1,0 +1,41 @@
+name: Run Java and Python
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  run-java-python:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python packages
+      run: pip install requests beautifulsoup4 pandas
+
+    - name: Compile Java
+      run: javac AutoRunner.java
+
+    - name: Run AutoRunner
+      run: java AutoRunner
+
+    - name: Commit JSON changes (if any)
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add pokemon_data.json || echo "No changes"
+        git commit -m "✨ Auto-update JSON via GitHub Actions" || echo "Nothing to commit"
+        git push || echo "Nothing to push"
