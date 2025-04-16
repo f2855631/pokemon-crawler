@@ -19,7 +19,7 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 base_url = "https://tw.portal-pokemon.com/play/pokedex/"
 pokemon_list = []
 
-for num in range(1, 1026):  # 可調整抓取範圍
+for num in range(1, 1201):  # 可調整抓取範圍
     pokemon_id = str(num).zfill(4)
     url = base_url + pokemon_id
 
@@ -37,8 +37,8 @@ for num in range(1, 1026):  # 可調整抓取範圍
 
         # 名稱
         name_tag = soup.select_one(".pokemon-slider__main-name")
-        if not name_tag:
-            print(f"⚠️ 抓不到名字：編號 {pokemon_id}")
+        if not name_tag or not name_tag.text.strip():
+            print(f"⚠️ 抓不到名字或名稱為空：編號 {pokemon_id}，略過")
             continue
         name_zh = name_tag.text.strip()
 
