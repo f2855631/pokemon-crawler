@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: run-java-python
+  cancel-in-progress: true
+
 jobs:
   run-java-python:
     runs-on: ubuntu-latest
