@@ -8,6 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import json
 import time
+import os
+import requests
 
 options = Options()
 options.add_argument("--headless")
@@ -19,110 +21,136 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 base_url = "https://tw.portal-pokemon.com/play/pokedex/"
 pokemon_list = []
 
-for num in range(1, 1201):  # 可調整抓取範圍
-    pokemon_id = str(num).zfill(4)
-    url = base_url + pokemon_id
+# 建立本地圖片資料夾
+image_dir = "images"
+os.makedirs(image_dir, exist_ok=True)
 
-    print(f"🐾 正在抓取 {pokemon_id}...")
+# 讀取已存在的 JSON 資料（若有）
+existing_ids = set()
+if os.path.exists("pokemon_data.json"):
+    with open("pokemon_data.json", "r", encoding="utf-8") as f:
+        existing_data = json.load(f)
+        existing_ids = set(p["id"] for p in existing_data)
+else:
+    existing_data = []
 
-    driver.get(url)
-    time.sleep(3)  # 增加等待時間確保頁面載入完成
+num = 1
+while True:
+    base_id = str(num).zfill(4)
+    sub_id = 0
 
-    try:
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".pokemon-slider__main-name"))
-        )
+    while sub_id <= 3:
+        pokemon_id = base_id if sub_id == 0 else f"{base_id}_{sub_id}"
 
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-
-        # 名稱
-        name_tag = soup.select_one(".pokemon-slider__main-name")
-        if not name_tag or not name_tag.text.strip():
-            print(f"⚠️ 抓不到名字或名稱為空：編號 {pokemon_id}，略過")
+        if pokemon_id in existing_ids:
+            print(f"⏭️ 已存在 {pokemon_id}，略過")
+            sub_id += 1
             continue
-        name_zh = name_tag.text.strip()
 
-        # 屬性
-        type_tags = soup.select(".pokemon-type__type")
-        type_list = [t.text.strip() for t in type_tags]
+        url = base_url + pokemon_id
+        print(f"🐾 正在抓取 {pokemon_id}...")
 
-        # 身高 / 體重
-        height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
-        weight_tag = soup.select_one(".pokemon-info__weight .pokemon-info__value")
-        height = height_tag.text.strip() if height_tag else ""
-        weight = weight_tag.text.strip() if weight_tag else ""
+        try:
+            driver.get(url)
+            time.sleep(3)
+            soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        # 圖片
-        img_tag = soup.select_one(".pokemon-img__front")
-        img_url = img_tag["src"] if img_tag and "src" in img_tag.attrs else ""
-        if img_url.startswith("/"):
-            img_url = "https://tw.portal-pokemon.com" + img_url
+            page_msg = soup.select_one(".page-other__lead")
+            if page_msg and "can't be found" in page_msg.text:
+                # 若連主頁面都不存在，代表整體圖鑑結束，終止爬蟲流程
+                    print(f"⛔ {pokemon_id} 是主體頁，終止爬蟲")
+                    driver.quit()
+                    all_pokemon = existing_data + pokemon_list
+                    with open("pokemon_data.json", "w", encoding="utf-8") as f:
+                        json.dump(all_pokemon, f, ensure_ascii=False, indent=2)
+                    break  # 用 break 結束 while True 外層迴圈
+                else:
+                    print(f"🔚 {pokemon_id} 是延伸型態不存在，結束延伸嘗試")
+                    break
 
-        # 弱點
-        weak_tags = soup.select(".pokemon-weakness__btn span")
-        weak_list = [t.text.strip() for t in weak_tags if t.text.strip()]
+            name_tag = soup.select_one(".pokemon-slider__main-name")
+            if not name_tag or not name_tag.text.strip():
+                print(f"⚠️ 抓不到名字或名稱為空：編號 {pokemon_id}，略過")
+                sub_id += 1
+                continue
+            name_zh = name_tag.text.strip()
 
-        # 分類
-        category_tag = soup.select_one(".pokemon-info__category .pokemon-info__value")
-        category = category_tag.text.strip() if category_tag else ""
+            type_tags = soup.select(".pokemon-type__type")
+            type_list = [t.text.strip() for t in type_tags]
 
-        # 性別
-        # 依據抓取到的性別圖示進行處理
-        gender_icons = soup.select(".pokemon-info__gender .pokemon-info__gender-icon")
-        gender_list = []
-        
-        for icon in gender_icons:
-            src = icon.get("src", "")
-            
-            # 確保有 src 且 src 中包含 "male" 或 "female"
-            if "male" in src and "公" not in gender_list:
-                gender_list.append("公")
-            elif "female" in src and "母" not in gender_list:
-                gender_list.append("母")
-        
-        # 如果有性別圖示，顯示對應性別；如果沒有則顯示 "無"
-        gender = " / ".join(gender_list) if gender_list else "無"
+            height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
+            weight_tag = soup.select_one(".pokemon-info__weight .pokemon-info__value")
+            height = height_tag.text.strip() if height_tag else ""
+            weight = weight_tag.text.strip() if weight_tag else ""
 
-        # 特性名稱：抓取連結
-        ability_containers = soup.select(".pokemon-info__abilities .pokemon-info__value.size-14")
+            img_tag = soup.select_one(".pokemon-img__front")
+            img_url = img_tag["src"] if img_tag and "src" in img_tag.attrs else ""
+            if img_url.startswith("/"):
+                img_url = "https://tw.portal-pokemon.com" + img_url
 
-        abilities = []
-        for container in ability_containers:
-            # 去除圖片
-            for img in container.find_all("img"):
-                img.decompose()
-        
-            ability_text = container.get_text(strip=True)
-            if ability_text:
-                abilities.append(ability_text)
-        
-        # 如果沒有找到任何特性，則將 abilities 設為空列表
-        if not abilities:
+            img_filename = f"{pokemon_id}_{name_zh}.png"
+            img_path = os.path.join(image_dir, img_filename)
+            if img_url:
+                try:
+                    response = requests.get(img_url, timeout=10)
+                    if response.status_code == 200:
+                        with open(img_path, "wb") as img_file:
+                            img_file.write(response.content)
+                except Exception as img_err:
+                    print(f"⚠️ 圖片下載失敗：{img_err}")
+                    img_path = ""
+
+            weak_tags = soup.select(".pokemon-weakness__btn span")
+            weak_list = [t.text.strip() for t in weak_tags if t.text.strip()]
+
+            category_tag = soup.select_one(".pokemon-info__category .pokemon-info__value")
+            category = category_tag.text.strip() if category_tag else ""
+
+            gender_icons = soup.select(".pokemon-info__gender .pokemon-info__gender-icon")
+            gender_list = []
+            for icon in gender_icons:
+                src = icon.get("src", "")
+                if "male" in src and "公" not in gender_list:
+                    gender_list.append("公")
+                elif "female" in src and "母" not in gender_list:
+                    gender_list.append("母")
+            gender = " / ".join(gender_list) if gender_list else "無"
+
+            ability_containers = soup.select(".pokemon-info__abilities .pokemon-info__value.size-14")
             abilities = []
+            for container in ability_containers:
+                for img in container.find_all("img"):
+                    img.decompose()
+                ability_text = container.get_text(strip=True)
+                if ability_text:
+                    abilities.append(ability_text)
 
-        # 整理資料
-        pokemon = {
-            "id": pokemon_id,
-            "name": name_zh,
-            "types": type_list,
-            "height": height,
-            "weight": weight,
-            "image": img_url,
-            "weakness": weak_list,
-            "category": category,
-            "gender": gender,
-            "abilities": abilities            
-        }
+            pokemon = {
+                "id": pokemon_id,
+                "name": name_zh,
+                "types": type_list,
+                "height": height,
+                "weight": weight,
+                "image": img_path,
+                "weakness": weak_list,
+                "category": category,
+                "gender": gender,
+                "abilities": abilities
+            }
 
-        pokemon_list.append(pokemon)
-        print(f"✅ 已抓取 {name_zh} ✅")
+            pokemon_list.append(pokemon)
+            print(f"✅ 已抓取 {name_zh} ✅")
+            sub_id += 1
 
-    except Exception as e:
-        print(f"❌ 發生錯誤：{e}")
-        continue
+        except Exception as e:
+            print(f"❌ 發生錯誤：{e}")
+            break
+
+    num += 1
 
 driver.quit()
 
-# 存檔
+# 合併原本資料 + 新資料後存檔
+all_pokemon = existing_data + pokemon_list
 with open("pokemon_data.json", "w", encoding="utf-8") as f:
-    json.dump(pokemon_list, f, ensure_ascii=False, indent=2)
+    json.dump(all_pokemon, f, ensure_ascii=False, indent=2)
