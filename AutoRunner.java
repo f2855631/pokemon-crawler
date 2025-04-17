@@ -15,8 +15,9 @@ public class AutoRunner {
                 System.out.println("📤 推送變更中...");
                 runCommand("git add .");
                 runCommand("git commit -m \"Auto commit\"");
-                runCommand("git push");
-
+                String token = System.getenv("GITHUB_TOKEN");
+                runCommand("git push https://x-access-token:" + token + "@github.com/f2855631/pokemon-crawler.git");
+                
                 System.out.println("✅ 成功 Push 到 GitHub！");
             } else {
                 System.out.println("🟡 沒有變動，跳過爬蟲與推送。");
