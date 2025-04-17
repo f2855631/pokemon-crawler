@@ -1,8 +1,8 @@
 name: Run Java and Python
 
-on:
-  push:
-    branches: [main]
+#on:
+ # push:
+  #  branches: [main]
 
 permissions:
   contents: write
