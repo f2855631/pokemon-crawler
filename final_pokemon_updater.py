@@ -189,4 +189,3 @@ with open(DATA_FILE, "w", encoding="utf-8") as f:
 
 print(f"🎯 本次共新增 {len(new_data)} 筆寶可夢資料！")
 driver.quit()
-
