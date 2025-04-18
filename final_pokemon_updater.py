@@ -91,12 +91,21 @@ for key in sorted(unique_keys):
     name_tag = soup.select_one(".pokemon-slider__main-name")
     category_tag = soup.select_one(".pokemon-info__category")
     gender_tag = soup.select_one(".pokemon-info__gender-icon")
-    skill_tags = soup.select(".pokemon-move__title")
+
+    ability_tags = soup.select(".pokemon-ability__item span")
+    abilities = [a.text.strip() for a in ability_tags if a.text.strip()]
+
+    weakness_tags = soup.select(".pokemon-weakness__btn span")
+    weaknesses = [w.text.strip() for w in weakness_tags if w.text.strip()]
+
+    height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
+    weight_tag = soup.select_one(".pokemon-info__weight .pokemon-info__value")
 
     name = name_tag.text.strip() if name_tag else "未知"
     category = category_tag.text.strip() if category_tag else ""
     gender = "male/female" if gender_tag else "unknown"
-    skills = [s.text.strip() for s in skill_tags if s.text.strip()]
+    height = height_tag.text.strip() if height_tag else ""
+    weight = weight_tag.text.strip() if weight_tag else ""
 
     img_filename = f"{pid}_{subid}.png"
     img_url = f"https://tw.portal-pokemon.com/play/resources/pokedex/img/pm_{pid}_{int(subid):02}.png"
@@ -119,7 +128,10 @@ for key in sorted(unique_keys):
         "name": name,
         "category": category,
         "gender": gender,
-        "skills": skills,
+        "height": height,
+        "weight": weight,
+        "abilities": abilities,
+        "weaknesses": weaknesses,
         "local_image_path": img_path
     }
 
@@ -132,10 +144,4 @@ with open(DATA_FILE, "w", encoding="utf-8") as f:
     json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=2)
 
 print(f"🎯 本次共新增 {len(new_data)} 筆寶可夢資料！")
-driver.quit()
-
-# 寫入結果
-with open(DATA_FILE, "w", encoding="utf-8") as f:
-    json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=2)
-
 driver.quit()
