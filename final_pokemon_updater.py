@@ -109,37 +109,11 @@ for key in sorted(unique_keys):
     elif female:
         gender = "♀"
     else:
-        gender = """♂ / ♀"
-elif male:
-    gender = "♂"
-elif female:
-    gender = "♀"
-else:
-    gender = """♂ / ♀"
-    elif male:
-        gender = "♂"
-    elif female:
-        gender = "♀"
-    else:
-        gender = ""soup.select_one(".pokemon-info__gender-icon")
-    if gender_block:
-        male = gender_block.find("img", {"alt": "雄性"})
-        female = gender_block.find("img", {"alt": "雌性"})
-        if male and female:
-            gender = "♂ / ♀"
-        elif male:
-            gender = "♂"
-        elif female:
-            gender = "♀"
-        else:
-            gender = ""
-    else:
         gender = ""
 
     # 特性、身高、體重
     ability_tag = soup.select_one(".pokemon-info__abilities .pokemon-info__value")
-    abilities = ability_tag.contents[0].strip().split(" / ") if ability_tag and ability_tag.contents else [].pokemon-info__value span")
-    abilities = [a.text.strip() for a in ability_tags if a.text.strip()]
+    abilities = ability_tag.contents[0].strip().split(" / ") if ability_tag and ability_tag.contents else []
 
     height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
     weight_tag = soup.select_one(".pokemon-info__weight .pokemon-info__value")
@@ -155,7 +129,7 @@ else:
     img_tag = soup.select_one(".pokemon-img__front")
     if img_tag and img_tag.get("src"):
         img_url = "https://tw.portal-pokemon.com" + img_tag["src"]
-        img_filename = img_url.split("/")[-1]  # 真實圖檔名稱
+        img_filename = img_url.split("/")[-1]
     else:
         img_filename = f"{pid}_{subid}.png"
         img_url = f"https://tw.portal-pokemon.com/play/resources/pokedex/img/pm_{pid}_{int(subid):02}.png"
@@ -195,3 +169,4 @@ with open(DATA_FILE, "w", encoding="utf-8") as f:
 
 print(f"🎯 本次共新增 {len(new_data)} 筆寶可夢資料！")
 driver.quit()
+
