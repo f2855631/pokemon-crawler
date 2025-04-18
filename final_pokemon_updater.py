@@ -96,14 +96,20 @@ for key in sorted(unique_keys):
     category_tag = soup.select_one(".pokemon-info__category")
 
     # 解析性別圖示（新版以 src 判斷）
-    gender_icons = soup.select(".pokemon-info__gender-icon")
-    sources = [img.get("src", "") for img in gender_icons]
+gender_icons = soup.select(".pokemon-info__gender-icon")
+sources = [img.get("src", "") for img in gender_icons]
 
-    male = any("male" in src for src in sources)
-    female = any("female" in src for src in sources)
+male = any("male" in src for src in sources)
+female = any("female" in src for src in sources)
 
-    if male and female:
-        gender = "♂ / ♀"
+if male and female:
+    gender = "♂ / ♀"
+elif male:
+    gender = "♂"
+elif female:
+    gender = "♀"
+else:
+    gender = """♂ / ♀"
     elif male:
         gender = "♂"
     elif female:
