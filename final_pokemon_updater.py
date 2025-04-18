@@ -112,7 +112,8 @@ for key in sorted(unique_keys):
         gender = ""
 
     # 特性、身高、體重
-    ability_tags = soup.select(".pokemon-info__ability .pokemon-info__value span")
+    ability_tag = soup.select_one(".pokemon-info__abilities .pokemon-info__value")
+    abilities = ability_tag.contents[0].strip().split(" / ") if ability_tag and ability_tag.contents else [].pokemon-info__value span")
     abilities = [a.text.strip() for a in ability_tags if a.text.strip()]
 
     height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
@@ -169,3 +170,4 @@ with open(DATA_FILE, "w", encoding="utf-8") as f:
 
 print(f"🎯 本次共新增 {len(new_data)} 筆寶可夢資料！")
 driver.quit()
+
