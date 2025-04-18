@@ -94,20 +94,35 @@ for key in sorted(unique_keys):
 
     name_tag = soup.select_one(".pokemon-slider__main-name")
     category_tag = soup.select_one(".pokemon-info__category")
-    gender_tag = soup.select_one(".pokemon-info__gender-icon")
 
-    ability_tags = soup.select(".pokemon-ability__item span")
+    # 解析性別圖示（轉換為符號）
+    gender_block = soup.select_one(".pokemon-info__gender-icon")
+    if gender_block:
+        male = gender_block.find("img", {"alt": "雄性"})
+        female = gender_block.find("img", {"alt": "雌性"})
+        if male and female:
+            gender = "♂ / ♀"
+        elif male:
+            gender = "♂"
+        elif female:
+            gender = "♀"
+        else:
+            gender = ""
+    else:
+        gender = ""
+
+    # 特性、身高、體重
+    ability_tags = soup.select(".pokemon-info__ability .pokemon-info__value span")
     abilities = [a.text.strip() for a in ability_tags if a.text.strip()]
-
-    weakness_tags = soup.select(".pokemon-weakness__btn span")
-    weaknesses = [w.text.strip() for w in weakness_tags if w.text.strip()]
 
     height_tag = soup.select_one(".pokemon-info__height .pokemon-info__value")
     weight_tag = soup.select_one(".pokemon-info__weight .pokemon-info__value")
 
+    weakness_tags = soup.select(".pokemon-weakness__btn span")
+    weaknesses = [w.text.strip() for w in weakness_tags if w.text.strip()]
+
     name = name_tag.text.strip() if name_tag else "未知"
     category = category_tag.text.strip() if category_tag else ""
-    gender = "male/female" if gender_tag else "unknown"
     height = height_tag.text.strip() if height_tag else ""
     weight = weight_tag.text.strip() if weight_tag else ""
 
