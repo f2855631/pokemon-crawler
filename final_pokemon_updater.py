@@ -8,17 +8,15 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from time import sleep
 
-# === 設定 ===
 API_BATCH_SIZE = 100
 API_URL = "https://tw.portal-pokemon.com/play/pokedex/api/v1?pokemon_ability_id=&zukan_id_from={}&zukan_id_to={}"
 DATA_FILE = "pokemon_data.json"
 IMAGE_DIR = "images"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
-# === 初始化圖片資料夾 ===
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
-# === 載入已存在的資料 ===
+# 安全讀取本地資料
 existing_data = {}
 if os.path.exists(DATA_FILE):
     try:
@@ -32,22 +30,36 @@ if os.path.exists(DATA_FILE):
 else:
     print("📂 未發現 pokemon_data.json，將建立全新資料")
 
-# === 初始化 Selenium ===
+# 初始化 Selenium
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-# === 抓取所有 API 資料 ===
+# 呼叫 API 並安全處理
 all_api_data = []
 for i in range(1, 1100, API_BATCH_SIZE):
     url = API_URL.format(i, i + API_BATCH_SIZE - 1)
-    res = requests.get(url, headers=HEADERS)
-    if res.status_code == 200:
-        all_api_data.extend(res.json())
+    print(f"🌐 呼叫 API：{url}")
+    try:
+        res = requests.get(url, headers=HEADERS)
+        if res.status_code == 200:
+            try:
+                batch = res.json()
+                if isinstance(batch, list):
+                    all_api_data.extend(batch)
+                    print(f"✅ 拿到 {len(batch)} 筆資料")
+                else:
+                    print(f"⚠️ 回傳格式錯誤：不是 list，而是 {type(batch)}")
+            except Exception as e:
+                print(f"❌ 解析 JSON 失敗：{e}")
+        else:
+            print(f"❌ API 回傳狀態碼：{res.status_code}")
+    except Exception as e:
+        print(f"❌ 請求失敗：{e}")
 
-# === 去除重複項目 ===
+# 建立 key 清單
 unique_keys = set()
 for item in all_api_data:
     if isinstance(item, dict) and 'zukan_id' in item and 'zukan_sub_id' in item:
@@ -55,20 +67,20 @@ for item in all_api_data:
         subid = item['zukan_sub_id']
         unique_keys.add(f"{pid}_{subid}")
     else:
-        print(f"⚠️ 非預期資料格式，略過：{item}")
+        print(f"⚠️ 非預期資料格式：{item}")
 
-# === 爬取細節資料 ===
+# 執行爬蟲
 new_data = []
 for key in sorted(unique_keys):
     if key in existing_data:
-        print(f"✅ 資料已存在：{key}")
+        print(f"✅ 已存在：{key}")
         continue
 
     pid, subid = key.split("_")
     url = f"https://tw.portal-pokemon.com/play/pokedex/{pid}" + (f"_{subid}" if subid != "0" else "")
-    print(f"🔍 抓取細節頁面：{url}")
+    print(f"🔍 抓取：{url}")
     driver.get(url)
-    sleep(1)
+    sleep(1.5)
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
     container = soup.select_one(".contents.pokemon-detail-contents")
@@ -77,15 +89,13 @@ for key in sorted(unique_keys):
         continue
 
     name_tag = soup.select_one(".pokemon-slider__main-name")
-    name = name_tag.text.strip() if name_tag else "未知"
-
     category_tag = soup.select_one(".pokemon-info__category")
-    category = category_tag.text.strip() if category_tag else ""
-
     gender_tag = soup.select_one(".pokemon-info__gender-icon")
-    gender = "male/female" if gender_tag else "unknown"
-
     skill_tags = soup.select(".pokemon-move__title")
+
+    name = name_tag.text.strip() if name_tag else "未知"
+    category = category_tag.text.strip() if category_tag else ""
+    gender = "male/female" if gender_tag else "unknown"
     skills = [s.text.strip() for s in skill_tags if s.text.strip()]
 
     img_filename = f"{pid}_{subid}.png"
@@ -97,9 +107,7 @@ for key in sorted(unique_keys):
         if img_res.status_code == 200:
             with open(img_path, "wb") as f:
                 f.write(img_res.content)
-            print(f"🖼️ 圖片已下載：{img_filename}")
-        else:
-            print(f"⚠️ 圖片下載失敗：{img_url}")
+            print(f"🖼️ 圖片下載完成：{img_filename}")
 
     entry = {
         "id": pid,
@@ -110,17 +118,13 @@ for key in sorted(unique_keys):
         "skills": skills,
         "local_image_path": img_path
     }
+
     existing_data[key] = entry
     new_data.append(entry)
     print(f"✅ 已新增：{name} ({key})")
 
-# === 寫入 JSON ===
+# 寫入結果
 with open(DATA_FILE, "w", encoding="utf-8") as f:
     json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=2)
 
 driver.quit()
-
-# 合併原本資料 + 新資料後存檔
-all_pokemon = existing_data + pokemon_list
-with open("pokemon_data.json", "w", encoding="utf-8") as f:
-    json.dump(all_pokemon, f, ensure_ascii=False, indent=2)
