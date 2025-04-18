@@ -73,8 +73,12 @@ for item in all_api_data:
 new_data = []
 for key in sorted(unique_keys):
     if key in existing_data:
-        print(f"✅ 已存在：{key}")
-        continue
+        old = existing_data[key]
+        if all(k in old and old[k] for k in ["height", "weight", "abilities", "weaknesses"]):
+            print(f"✅ 已存在：{key}（資料完整，略過）")
+            continue
+        else:
+            print(f"🔁 已存在但資料不完整，重新抓取：{key}")
 
     pid, subid = key.split("_")
     url = f"https://tw.portal-pokemon.com/play/pokedex/{pid}" + (f"_{subid}" if subid != "0" else "")
