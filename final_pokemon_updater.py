@@ -48,7 +48,7 @@ if response.status_code != 200:
     print("❌ API 請求失敗")
     exit()
 
-api_data = response.json()
+api_data = response.json().get("data", [])
 new_data = []
 os.makedirs("images", exist_ok=True)
 
