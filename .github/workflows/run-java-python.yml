@@ -1,48 +1,34 @@
-name: Run Java and Python
+name: Auto Update Pokémon Data
 
-#on:
- # push:
-  #  branches: [main]
-
-permissions:
-  contents: write
-
-concurrency:
-  group: run-java-python
-  cancel-in-progress: true
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天台灣時間早上10點 (UTC+8)
+  workflow_dispatch:     # 手動觸發也可以
 
 jobs:
-  run-java-python:
+  update:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+
     steps:
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v3
 
-    - name: Setup Java
-      uses: actions/setup-java@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        java-version: '17'
-        distribution: 'temurin'
+        python-version: '3.10'
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install Python packages
-      run: pip install requests beautifulsoup4 pandas
-
-    - name: Compile Java
-      run: javac AutoRunner.java
-
-    - name: Run AutoRunner (with timeout)
-      run: timeout 3600s java AutoRunner
-
-    - name: Commit JSON changes (if any)
+    - name: Install dependencies
       run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git add pokemon_data.json || echo "No changes"
-        git commit -m "✨ Auto-update JSON via GitHub Actions" || echo "Nothing to commit"
-        git push || echo "Nothing to push"
+        pip install requests beautifulsoup4 selenium webdriver-manager
+
+    - name: Run updater
+      run: python final_pokemon_updater.py
+
+    - name: Commit and push if there are changes
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add pokemon_data.json images/
+        git diff --cached --quiet || git commit -m "🔄 自動更新寶可夢資料"
+        git push
