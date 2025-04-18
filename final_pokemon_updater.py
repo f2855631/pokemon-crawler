@@ -25,7 +25,17 @@ data_file = "pokemon_data.json"
 existing_data = {}
 if os.path.exists(data_file):
     with open(data_file, "r", encoding="utf-8") as f:
-        existing_data = {int(entry['zukan_id']): entry for entry in json.load(f)}
+        try:
+            loaded = json.load(f)
+            for entry in loaded:
+                if "id" in entry:
+                    key = f"{entry['id']}_{entry.get('sub_id', '00')}"
+                    existing_data[key] = entry
+                else:
+                    print(f"⚠️ 找不到 id，略過該筆：{entry.get('pokemon_name', '未知')}")
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON 解析錯誤：{e}")
+            loaded = []
 
 # === API 抓取資料 ===
 params = {
@@ -43,9 +53,12 @@ new_data = []
 os.makedirs("images", exist_ok=True)
 
 for item in api_data:
-    zukan_id = int(item.get("zukan_id", "0"))
-    if zukan_id in existing_data:
-        print(f"✅ 已存在 {item['pokemon_name']}，跳過")
+    zukan_id = item.get("zukan_id")
+    zukan_sub_id = item.get("zukan_sub_id", "00")
+    unique_key = f"{zukan_id}_{zukan_sub_id}"
+
+    if unique_key in existing_data:
+        print(f"✅ 已存在 {item['pokemon_name']}（{unique_key}），跳過")
         continue
 
     print(f"🔄 補抓 {item['pokemon_name']} 的詳細資料...")
@@ -94,10 +107,21 @@ for item in api_data:
     img_name = f"{str(zukan_id).zfill(4)}_{item['pokemon_name']}.png"
     img_path = os.path.join("images", img_name)
     if img_url and not os.path.exists(img_path):
-        img_data = requests.get(img_url).content
-        with open(img_path, "wb") as f:
-            f.write(img_data)
-        print(f"🖼️ 圖片已下載：{img_name}")
+        try:
+            img_data = requests.get(img_url, timeout=10)
+            img_data.raise_for_status()
+            with open(img_path, "wb") as f:
+                f.write(img_data.content)
+            print(f"🖼️ 圖片已下載：{img_name}")
+        except Exception as e:
+            print(f"❌ 圖片下載失敗：{img_name}，錯誤：{e}")
+            img_path = ""  # 記錄為空字串，方便後續辨識
+
+    # 儲存欄位轉換
+    item["id"] = zukan_id
+    item["sub_id"] = zukan_sub_id
+    item.pop("zukan_id", None)
+    item.pop("zukan_sub_id", None)
 
     # 組合資料
     item["category"] = category
@@ -117,5 +141,3 @@ with open(data_file, "w", encoding="utf-8") as f:
 
 driver.quit()
 print("✅ 全部完成！")
-
-
