@@ -51,7 +51,7 @@ for i in range(1, 1100, API_BATCH_SIZE):
                     all_api_data.extend(batch['pokemons'])
                     print(f"✅ 拿到 {len(batch['pokemons'])} 筆資料")
                 else:
-                     print(f"⚠️ 回傳格式錯誤：{type(batch)}，內容：{batch}")
+                    print(f"⚠️ 回傳格式錯誤：{type(batch)}，內容：{batch}")
             except Exception as e:
                 print(f"❌ 解析 JSON 失敗：{e}")
         else:
@@ -108,6 +108,10 @@ for key in sorted(unique_keys):
             with open(img_path, "wb") as f:
                 f.write(img_res.content)
             print(f"🖼️ 圖片下載完成：{img_filename}")
+        else:
+            print(f"❌ 圖片下載失敗：{img_url}，狀態碼：{img_res.status_code}")
+    else:
+        print(f"📦 圖片已存在，略過：{img_filename}")
 
     entry = {
         "id": pid,
@@ -122,6 +126,13 @@ for key in sorted(unique_keys):
     existing_data[key] = entry
     new_data.append(entry)
     print(f"✅ 已新增：{name} ({key})")
+
+# 寫入結果
+with open(DATA_FILE, "w", encoding="utf-8") as f:
+    json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=2)
+
+print(f"🎯 本次共新增 {len(new_data)} 筆寶可夢資料！")
+driver.quit()
 
 # 寫入結果
 with open(DATA_FILE, "w", encoding="utf-8") as f:
