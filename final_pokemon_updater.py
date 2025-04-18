@@ -47,11 +47,11 @@ for i in range(1, 1100, API_BATCH_SIZE):
         if res.status_code == 200:
             try:
                 batch = res.json()
-                if isinstance(batch, list):
-                    all_api_data.extend(batch)
-                    print(f"✅ 拿到 {len(batch)} 筆資料")
+                if isinstance(batch, dict) and 'pokemons' in batch and isinstance(batch['pokemons'], list):
+                    all_api_data.extend(batch['pokemons'])
+                    print(f"✅ 拿到 {len(batch['pokemons'])} 筆資料")
                 else:
-                    print(f"⚠️ 回傳格式錯誤：不是 list，而是 {type(batch)}")
+                     print(f"⚠️ 回傳格式錯誤：{type(batch)}，內容：{batch}")
             except Exception as e:
                 print(f"❌ 解析 JSON 失敗：{e}")
         else:
