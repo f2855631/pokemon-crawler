@@ -50,9 +50,12 @@ for i in range(1, 1100, API_BATCH_SIZE):
 # === 去除重複項目 ===
 unique_keys = set()
 for item in all_api_data:
-    pid = item['zukan_id']
-    subid = item['zukan_sub_id']
-    unique_keys.add(f"{pid}_{subid}")
+    if isinstance(item, dict) and 'zukan_id' in item and 'zukan_sub_id' in item:
+        pid = item['zukan_id']
+        subid = item['zukan_sub_id']
+        unique_keys.add(f"{pid}_{subid}")
+    else:
+        print(f"⚠️ 非預期資料格式，略過：{item}")
 
 # === 爬取細節資料 ===
 new_data = []
