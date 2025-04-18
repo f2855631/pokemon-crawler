@@ -23,7 +23,7 @@ existing_data = {}
 if os.path.exists(DATA_FILE):
     with open(DATA_FILE, encoding="utf-8") as f:
         for p in json.load(f):
-            key = f"{p['id']}_{p['sub_id']}"
+            key = f"{p['id']}_{p.get('sub_id', 0)}"
             existing_data[key] = p
 
 # === 初始化 Selenium ===
