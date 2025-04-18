@@ -23,7 +23,7 @@ jobs:
         pip install requests beautifulsoup4 selenium webdriver-manager
 
     - name: Run updater
-      run: python final_pokemon_updater.py
+      run: python crawler.py
 
     - name: Commit and push if there are changes
       run: |
