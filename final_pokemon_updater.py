@@ -21,10 +21,16 @@ os.makedirs(IMAGE_DIR, exist_ok=True)
 # === 載入已存在的資料 ===
 existing_data = {}
 if os.path.exists(DATA_FILE):
-    with open(DATA_FILE, encoding="utf-8") as f:
-        for p in json.load(f):
-            key = f"{p['id']}_{p.get('sub_id', 0)}"
-            existing_data[key] = p
+    try:
+        with open(DATA_FILE, encoding="utf-8") as f:
+            for p in json.load(f):
+                key = f"{p['id']}_{p.get('sub_id', 0)}"
+                existing_data[key] = p
+        print(f"🔍 已讀取本地 JSON：共 {len(existing_data)} 筆資料")
+    except Exception as e:
+        print(f"⚠️ 無法讀取 JSON：{e}，將跳過舊資料")
+else:
+    print("📂 未發現 pokemon_data.json，將建立全新資料")
 
 # === 初始化 Selenium ===
 chrome_options = Options()
