@@ -111,8 +111,13 @@ for key in sorted(unique_keys):
     height = height_tag.text.strip() if height_tag else ""
     weight = weight_tag.text.strip() if weight_tag else ""
 
-    img_filename = f"{pid}_{subid}.png"
-    img_url = f"https://tw.portal-pokemon.com/play/resources/pokedex/img/pm_{pid}_{int(subid):02}.png"
+    img_tag = soup.select_one(".pokemon-img__front")
+    if img_tag and img_tag.get("src"):
+        img_url = "https://tw.portal-pokemon.com" + img_tag["src"]
+        img_filename = img_url.split("/")[-1]  # 真實圖檔名稱
+    else:
+        img_filename = f"{pid}_{subid}.png"
+        img_url = f"https://tw.portal-pokemon.com/play/resources/pokedex/img/pm_{pid}_{int(subid):02}.png"
     img_path = os.path.join(IMAGE_DIR, img_filename)
 
     if not os.path.exists(img_path):
