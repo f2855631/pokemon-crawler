@@ -35,7 +35,7 @@ jobs:
           git push
 
       - name: Trigger Download Pokémon Images
-        uses: peter-evans/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: download-images.yml
           token: ${{ secrets.GITHUB_TOKEN }}
