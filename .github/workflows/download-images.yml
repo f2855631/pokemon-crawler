@@ -1,9 +1,10 @@
 name: Download Pokémon Images
 
 on:
-  schedule:
-    - cron: '30 2 * * *'  # 每天凌晨 2:30 自動執行
-  workflow_dispatch:      # 手動觸發也可以
+  workflow_run:
+    workflows: ["Update Pokémon JSON"]
+    types:
+      - completed
 
 jobs:
   download-images:
