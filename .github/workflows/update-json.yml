@@ -1,13 +1,12 @@
-name: Download Pokémon Images
+name: Update Pokémon JSON
 
 on:
-  workflow_run:
-    workflows: ["Update Pokémon JSON"]
-    types:
-      - completed
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨 2:00 執行
+  workflow_dispatch:      # 支援手動觸發
 
 jobs:
-  download-images:
+  update-json:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +21,21 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 selenium webdriver-manager
 
-      - name: Run image_downloader.py
-        run: python image_downloader.py
+      - name: Run json_updater.py
+        run: python json_updater.py
 
-      - name: Commit updated JSON and images (if needed)
+      - name: Commit updated JSON (if needed)
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add pokemon_data.json images/
-          git diff --cached --quiet || git commit -m "🔄 自動更新圖片與 JSON"
+          git add pokemon_data.json
+          git diff --cached --quiet || git commit -m "📝 自動更新 JSON 資料"
           git push
+
+      - name: Trigger Download Pokémon Images
+        uses: peter-evans/workflow-dispatch@v1
+        with:
+          workflow: download-images.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
