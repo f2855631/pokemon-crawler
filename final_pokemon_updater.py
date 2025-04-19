@@ -32,11 +32,26 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 
 # ================== 從 API 抓基本資料 ==================
 response = requests.get(API_URL)
-api_data = response.json()
+try:
+    api_data = response.json()
+    if not isinstance(api_data, list):
+        raise ValueError("API response is not a list")
+except Exception as e:
+    print("❌ 無法解析 API JSON，錯誤內容：", e)
+    print("原始回應內容：", response.text[:200])
+    driver.quit()
+    exit(1)
 
 updated_data = []
 
 for entry in api_data:
+    print("\n➡️ API entry:", entry)
+    print("📌 type:", type(entry))
+
+    if not isinstance(entry, dict):
+        print("⚠️ 跳過不合法資料項：不是 dict")
+        continue
+
     pokemon_id = entry.get("id")
     sub_id = entry.get("sub_id", 0)
     name = entry.get("name")
@@ -134,3 +149,4 @@ with open(data_file, "w", encoding="utf-8") as f:
     json.dump(updated_data, f, ensure_ascii=False, indent=2)
 
 print("🎉 所有寶可夢資料更新完成！")
+
