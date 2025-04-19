@@ -33,9 +33,3 @@ jobs:
           git add pokemon_data.json
           git diff --cached --quiet || git commit -m "📝 自動更新 JSON 資料"
           git push
-
-      - name: Trigger Download Pokémon Images
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: download-images.yml
-          token: ${{ secrets.GITHUB_TOKEN }}
