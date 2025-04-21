@@ -1,4 +1,10 @@
-## 📢 圖片版權聲明（Copyright Notice）
+## 📢 圖片與角色聲明（Copyright Notice）
 
-本專案使用之寶可夢圖像、角色與相關資源，其智慧財產權皆屬於 台灣寶可夢官方網站 所有。  
-本專案僅作為學習用途展示，無任何商業用途。若有侵權疑慮，請來信告知，將立即移除相關內容。
+本專案使用之寶可夢角色圖像與相關素材，智慧財產權屬原權利人所有，僅供學術與學習用途展示。
+
+©Pokémon. ©Nintendo/Creatures Inc./GAME FREAK inc.  
+©Nintendo, Creatures, GAME FREAK, TV Tokyo, ShoPro, JR Kikaku.  
+TM and ® are trademarks of Nintendo.
+
+若有侵權疑慮，請來信通知，將立即下架處理。
+
