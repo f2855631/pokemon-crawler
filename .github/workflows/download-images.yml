@@ -6,31 +6,35 @@ on:
     types:
       - completed
 
+concurrency:
+  group: download-images
+  cancel-in-progress: true
+
 jobs:
   download-images:
+    if: ${{ github.event.workflow_run.event == 'schedule' }}  # 只接受 schedule 來源
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: 3.10
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
+        run: pip install -r requirements.txt
 
-      - name: Run image_downloader.py
-        run: python image_downloader.py
+      - name: Run image downloader
+        run: python download_images.py
 
-      - name: Commit updated JSON and images (if needed)
+      - name: Commit and push new images
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pokemon_data.json images/
-          git diff --cached --quiet || git commit -m "🔄 自動更新圖片"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add images/
+          git diff --cached --quiet || git commit -m "自動更新圖片"
           git push
