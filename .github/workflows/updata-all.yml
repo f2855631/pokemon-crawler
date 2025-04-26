@@ -1,0 +1,49 @@
+name: Update Pokémon JSON and Images
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 UTC 2:00（台灣時間 10:00）
+  workflow_dispatch:
+
+jobs:
+  update-and-download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 顯示觸發方式與時間
+        run: |
+          echo "觸發方式：${{ github.event_name }}"
+          echo "執行時間：$(date)"
+
+      - name: Run JSON updater
+        run: python final_pokemon_updater.py
+
+      - name: Commit JSON if changed
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add pokemon_data.json
+          git diff --cached --quiet || git commit -m "更新 JSON"
+          git push
+
+      - name: Run image downloader
+        run: python download_images.py
+
+      - name: Commit images if changed
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add images/
+          git diff --cached --quiet || git commit -m "更新圖片"
+          git push
