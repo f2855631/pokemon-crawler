@@ -27,7 +27,7 @@ jobs:
           echo "執行時間：$(date)"
 
       - name: Run JSON updater
-        run: python final_pokemon_updater.py
+        run: python json_updater.py
 
       - name: Commit JSON if changed
         run: |
