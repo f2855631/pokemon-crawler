@@ -3,7 +3,7 @@ name: Update Pokémon JSON
 on:
   schedule:
     - cron: '0 2 * * *'  # 每天凌晨 2:00 執行
-  #workflow_dispatch:      # 支援手動觸發
+  workflow_dispatch:      # 支援手動觸發
 
 jobs:
   update-json:
