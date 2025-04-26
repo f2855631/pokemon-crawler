@@ -16,12 +16,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.10"  # ⚠️ 要加引號避免誤判成 3.1
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: 安裝必要套件（免 requirements.txt）
+        run: pip install requests beautifulsoup4 selenium webdriver-manager
 
-      - name: 顯示觸發方式與時間
+      - name: 顯示觸發方式與執行時間
         run: |
           echo "觸發方式：${{ github.event_name }}"
           echo "執行時間：$(date)"
