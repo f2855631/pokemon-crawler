@@ -38,7 +38,7 @@ jobs:
           git push
 
       - name: Run image downloader
-        run: python download_images.py
+        run: python image_downloader.py
 
       - name: Commit images if changed
         run: |
