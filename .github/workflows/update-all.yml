@@ -2,7 +2,7 @@ name: Update Pokémon JSON and Images
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # 每天 UTC 2:00（台灣時間 10:00）
+    - cron: '0 2 1 * *'  # 每月1號的 UTC 2:00（台灣時間 10:00）
   workflow_dispatch:
 
 jobs:
