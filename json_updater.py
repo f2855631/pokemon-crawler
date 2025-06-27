@@ -49,10 +49,10 @@ def fetch_details_from_html(driver, zukan_id):
             )
             break  # 成功載入跳出迴圈
         except Exception as e:
-            print(f"⚠️ 第 {attempt+1} 次重試失敗：{zukan_id}")
+            print(f"第 {attempt+1} 次重試失敗：{zukan_id}")
             time.sleep(2)
     else:
-        print(f"❌ 最終跳過 {zukan_id}，仍無法載入頁面")
+        print(f"最終跳過 {zukan_id}，仍無法載入頁面")
         return {}
 
     # 使用 BeautifulSoup 解析網頁內容
@@ -175,7 +175,7 @@ def main():
             existing_entry.update(html_data)
 
         output.append(existing_entry)
-        print(f"✅ JSON資料完成 {key}")
+        print(f"JSON資料完成 {key}")
 
     # 關閉 driver
     driver.quit()
@@ -184,7 +184,7 @@ def main():
     with open(data_file, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print("🎉 JSON 資料更新完成！")
+    print("JSON 資料更新完成！")
 
 # ---------- 程式進入點 ----------
 if __name__ == "__main__":
