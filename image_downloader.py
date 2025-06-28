@@ -18,9 +18,9 @@ try:
     response = requests.get(API_URL, timeout=10)  # 設定 timeout 避免卡住
     response.raise_for_status()  # 若回應不是 200，會丟出例外
     raw_data = response.json().get("pokemons", [])  # 取出寶可夢資料陣列
-    print(f"🔄 從 API 取得 {len(raw_data)} 筆資料")
+    print(f"從 API 取得 {len(raw_data)} 筆資料")
 except Exception as e:
-    print(f"❌ 無法從 API 取得資料：{e}")
+    print(f"無法從 API 取得資料：{e}")
     exit(1)  # 若無法取得資料就終止程式
 
 # ---------- 開始處理每一筆寶可夢圖片 ----------
@@ -33,7 +33,7 @@ for i, entry in enumerate(raw_data, 1):
 
     # ---------- 若圖片連結為空或無效，就記錄錯誤 ----------
     if not image_url or image_url.startswith("images/"):
-        print(f"⚠️ 無效圖片連結：{pokemon_id}_{sub_id} → {image_url}")
+        print(f"無效圖片連結：{pokemon_id}_{sub_id} → {image_url}")
         missing_list.append(f"{pokemon_id}_{sub_id}: {image_url}")
         continue
 
@@ -49,7 +49,7 @@ for i, entry in enumerate(raw_data, 1):
 
     # ---------- 若圖片已存在，就跳過 ----------
     if os.path.exists(image_path):
-        print(f"✅ 已存在：{image_filename}")
+        print(f"已存在：{image_filename}")
         continue
 
     # ---------- 嘗試下載圖片 ----------
@@ -59,7 +59,7 @@ for i, entry in enumerate(raw_data, 1):
         # ---------- 若主網址 404，試試備用網址 ----------
         if response.status_code == 404 and image_url.startswith("/img"):
             backup_url = f"https://tw.portal-pokemon.com/play/resources/pokedex{image_url}"
-            print(f"🔁 嘗試備用網址：{backup_url}")
+            print(f"嘗試備用網址：{backup_url}")
             response = requests.get(backup_url, timeout=10)
             if response.status_code == 200:
                 full_url = backup_url
@@ -68,21 +68,21 @@ for i, entry in enumerate(raw_data, 1):
         if response.status_code == 200:
             with open(image_path, "wb") as f:
                 f.write(response.content)
-            print(f"🖼️ 已下載圖片（{i}/{total}）：{image_filename}")
+            print(f"已下載圖片（{i}/{total}）：{image_filename}")
         else:
             # ---------- 回應非 200，記錄錯誤 ----------
-            print(f"❌ 下載失敗（{image_filename}） - 狀態碼 {response.status_code}")
+            print(f"下載失敗（{image_filename}） - 狀態碼 {response.status_code}")
             missing_list.append(f"{pokemon_id}_{sub_id}: {image_url} (status {response.status_code})")
     except Exception as e:
         # ---------- 發生例外，記錄錯誤 ----------
-        print(f"⚠️ 下載錯誤（{image_filename}）：{e}")
+        print(f"下載錯誤（{image_filename}）：{e}")
         missing_list.append(f"{pokemon_id}_{sub_id}: {image_url} (error: {e})")
 
 # ---------- 如果有錯誤圖片，輸出成一個記錄檔 ----------
 if missing_list:
     with open(missing_file, "w", encoding="utf-8") as f:
         f.write("\n".join(missing_list))
-    print(f"📄 已記錄 {len(missing_list)} 筆錯誤到 {missing_file}")
+    print(f"已記錄 {len(missing_list)} 筆錯誤到 {missing_file}")
 
 # ---------- 全部結束 ----------
-print("🎉 所有圖片處理完畢")
+print("所有圖片處理完畢")
